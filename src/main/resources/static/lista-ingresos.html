@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lista de Ingresos - SENA</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+          font-family: 'Segoe UI', sans-serif;
+          background: #f0f4f8;
+          min-height: 100vh;
+          padding: 30px 16px;
+        }
+        .card {
+          background: #fff; border-radius: 12px;
+          box-shadow: 0 4px 20px rgba(0,0,0,.1);
+          width: 100%; max-width: 900px;
+          margin: 0 auto; overflow: hidden;
+        }
+        .card-header {
+          background: #39A900; color: #fff;
+          padding: 24px 32px;
+          display: flex; justify-content: space-between; align-items: center;
+        }
+        .card-header h1 { font-size: 1.2rem; }
+        .card-header p  { font-size: .82rem; opacity: .85; margin-top: 4px; }
+        .card-header a {
+          background: #fff; color: #39A900;
+          padding: 7px 16px; border-radius: 7px;
+          font-weight: 700; font-size: .82rem;
+          text-decoration: none;
+        }
+        .card-body { padding: 24px 32px; }
+        .toolbar {
+          display: flex; gap: 12px;
+          flex-wrap: wrap; margin-bottom: 20px; align-items: flex-end;
+        }
+        .toolbar input {
+          flex: 1; min-width: 150px;
+          padding: 9px 12px; border: 1.5px solid #cfd8dc;
+          border-radius: 7px; font-size: .88rem;
+        }
+        .toolbar input:focus { outline: none; border-color: #39A900; }
+        .toolbar label { font-size: .8rem; font-weight: 600; color: #555; display: block; margin-bottom: 4px; }
+        .lang-toggle { display: flex; gap: 8px; }
+        .lang-btn {
+          padding: 8px 14px; border: 2px solid #cfd8dc;
+          border-radius: 7px; background: #fafafa;
+          cursor: pointer; font-weight: 700; font-size: .82rem;
+          transition: all .2s;
+        }
+        .lang-btn.active { border-color: #39A900; background: #e8f5e9; color: #39A900; }
+        .btn-filter {
+          padding: 9px 20px; background: #39A900;
+          color: #fff; border: none; border-radius: 7px;
+          font-weight: 700; cursor: pointer; font-size: .88rem;
+        }
+        .btn-filter:hover { background: #2e8700; }
+        table { width: 100%; border-collapse: collapse; font-size: .88rem; }
+        thead { background: #39A900; color: #fff; }
+        thead th { padding: 11px 12px; text-align: left; font-weight: 600; }
+        tbody tr { border-bottom: 1px solid #ecf0f1; transition: background .15s; }
+        tbody tr:hover { background: #f9fbe7; }
+        tbody td { padding: 10px 12px; color: #333; vertical-align: middle; }
+        .btn-delete {
+          background: #ffebee; color: #c62828;
+          border: 1px solid #ef9a9a; padding: 5px 12px;
+          border-radius: 6px; font-size: .8rem; font-weight: 700;
+          cursor: pointer; transition: background .2s; margin-left: 6px;
+        }
+        .btn-delete:hover { background: #e53935; color: #fff; }
+        .btn-edit {
+          background: #e3f2fd; color: #1565c0;
+          border: 1px solid #90caf9; padding: 5px 12px;
+          border-radius: 6px; font-size: .8rem; font-weight: 700;
+          cursor: pointer; transition: background .2s;
+        }
+        .btn-edit:hover { background: #1565c0; color: #fff; }
+        .empty { text-align: center; padding: 40px; color: #aaa; }
+        .loading { text-align: center; padding: 40px; color: #39A900; font-weight: 600; }
+        .toast {
+          display: none; margin-bottom: 16px;
+          padding: 12px 16px; border-radius: 8px;
+          font-size: .9rem; font-weight: 600;
+        }
+        .toast.success { background: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; }
+        .toast.error   { background: #ffebee; color: #c62828; border: 1px solid #ef9a9a; }
+
+        .modal-overlay {
+          display: none; position: fixed;
+          inset: 0; background: rgba(0,0,0,.45);
+          z-index: 100; align-items: center; justify-content: center;
+        }
+        .modal-overlay.open { display: flex; }
+        .modal {
+          background: #fff; border-radius: 12px;
+          padding: 32px; width: 100%; max-width: 400px;
+          box-shadow: 0 8px 32px rgba(0,0,0,.2);
+        }
+        .modal h2 { color: #39A900; margin-bottom: 20px; font-size: 1.1rem; }
+        .modal label { font-size: .82rem; font-weight: 600; color: #444; display: block; margin-bottom: 4px; }
+        .modal input {
+          width: 100%; padding: 9px 12px;
+          border: 1.5px solid #cfd8dc; border-radius: 7px;
+          font-size: .9rem; margin-bottom: 14px;
+        }
+        .modal input:focus { outline: none; border-color: #39A900; }
+        .modal-actions { display: flex; gap: 10px; margin-top: 8px; }
+        .btn-save {
+          flex: 1; padding: 11px; background: #39A900;
+          color: #fff; border: none; border-radius: 8px;
+          font-weight: 700; cursor: pointer;
+        }
+        .btn-save:hover { background: #2e8700; }
+        .btn-cancel {
+          flex: 1; padding: 11px; background: #f5f5f5;
+          color: #555; border: 1px solid #ddd; border-radius: 8px;
+          font-weight: 700; cursor: pointer;
+        }
+        .btn-cancel:hover { background: #e0e0e0; }
+    </style>
+</head>
+<body>
+<div class="card">
+    <div class="card-header">
+        <div>
+            <h1 id="titulo">Lista de Ingresos</h1>
+            <p>Sistema de apoyo de sostenimiento · SENA</p>
+        </div>
+        <a href="index.html">← Inicio</a>
+    </div>
+
+    <div class="card-body">
+        <div class="toast" id="toast"></div>
+
+        <div class="toolbar">
+            <div>
+                <label id="label-filtro">Filtrar por monto mínimo</label>
+                <input type="number" id="montoMinimo" placeholder="Ej: 100000" min="0" />
+            </div>
+            <div style="display:flex;flex-direction:column;justify-content:flex-end">
+                <button class="btn-filter" onclick="cargarIngresos()" id="btnFiltrar">Filtrar</button>
+            </div>
+            <div>
+                <label id="label-idioma">Idioma</label>
+                <div class="lang-toggle">
+                    <button class="lang-btn active" id="btn-es" onclick="setLang('es')">🇨🇴 ES</button>
+                    <button class="lang-btn"        id="btn-en" onclick="setLang('en')">🇺🇸 EN</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="contenido">
+            <div class="loading">Cargando ingresos...</div>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+        <h2 id="modal-titulo">Editar Ingreso</h2>
+        <input type="hidden" id="edit-id" />
+        <label id="modal-label-monto">Monto</label>
+        <input type="number" id="edit-monto" min="1" />
+        <label id="modal-label-fecha">Fecha</label>
+        <input type="date" id="edit-fecha" />
+        <div class="modal-actions">
+            <button class="btn-save"   id="btnGuardar"   onclick="guardarEdicion()">Guardar</button>
+            <button class="btn-cancel" id="btnCancelar"  onclick="cerrarModal()">Cancelar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let lang = 'es';
+    let ingresos = [];
+
+    const textos = {
+      es: {
+        titulo: 'Lista de Ingresos',
+        labelFiltro: 'Filtrar por monto mínimo',
+        labelIdioma: 'Idioma',
+        btnFiltrar: 'Filtrar',
+        thId: 'ID', thMonto: 'Monto', thFecha: 'Fecha', thAcciones: 'Acciones',
+        btnEditar: 'Editar', btnEliminar: 'Eliminar',
+        modalTitulo: 'Editar Ingreso',
+        modalLabelMonto: 'Monto', modalLabelFecha: 'Fecha',
+        btnGuardar: 'Guardar', btnCancelar: 'Cancelar',
+        vacio: 'No se encontraron ingresos.',
+        confirmEliminar: '¿Seguro que deseas eliminar este ingreso?',
+        noConexion: 'No se pudo conectar con el servidor. ¿Está corriendo Spring?'
+      },
+      en: {
+        titulo: 'Income List',
+        labelFiltro: 'Filter by minimum amount',
+        labelIdioma: 'Language',
+        btnFiltrar: 'Filter',
+        thId: 'ID', thMonto: 'Amount', thFecha: 'Date', thAcciones: 'Actions',
+        btnEditar: 'Edit', btnEliminar: 'Delete',
+        modalTitulo: 'Edit Income',
+        modalLabelMonto: 'Amount', modalLabelFecha: 'Date',
+        btnGuardar: 'Save', btnCancelar: 'Cancel',
+        vacio: 'No income records found.',
+        confirmEliminar: 'Are you sure you want to delete this income?',
+        noConexion: 'Could not connect to the server. Is Spring running?'
+      }
+    };
+
+    function setLang(l) {
+      lang = l;
+      const t = textos[l];
+      document.getElementById('titulo').textContent          = t.titulo;
+      document.getElementById('label-filtro').textContent    = t.labelFiltro;
+      document.getElementById('label-idioma').textContent    = t.labelIdioma;
+      document.getElementById('btnFiltrar').textContent      = t.btnFiltrar;
+      document.getElementById('modal-titulo').textContent    = t.modalTitulo;
+      document.getElementById('modal-label-monto').textContent = t.modalLabelMonto;
+      document.getElementById('modal-label-fecha').textContent = t.modalLabelFecha;
+      document.getElementById('btnGuardar').textContent      = t.btnGuardar;
+      document.getElementById('btnCancelar').textContent     = t.btnCancelar;
+      document.getElementById('btn-es').classList.toggle('active', l === 'es');
+      document.getElementById('btn-en').classList.toggle('active', l === 'en');
+      renderTabla(ingresos);
+    }
+
+    async function cargarIngresos() {
+      const montoMinimo = document.getElementById('montoMinimo').value || 0;
+      try {
+        const res = await fetch(`/ingreso/listar?montoMinimo=${montoMinimo}`, {
+          headers: { 'Accept-Language': lang }
+        });
+        if (res.status >= 500) {
+          window.location.href = '/500.html';
+          return;
+        }
+        const data = await res.json().catch(() => null);
+        if (!data || !Array.isArray(data)) {
+          document.getElementById('contenido').innerHTML =
+            `<div class="empty">${textos[lang].vacio}</div>`;
+          return;
+        }
+        ingresos = data;
+        renderTabla(ingresos);
+      } catch (err) {
+        window.location.href = '/500.html';
+      }
+    }
+
+    function renderTabla(lista) {
+      const t = textos[lang];
+      if (!lista || lista.length === 0) {
+        document.getElementById('contenido').innerHTML =
+          `<div class="empty">${t.vacio}</div>`;
+        return;
+      }
+      let html = `
+        <table>
+          <thead>
+            <tr>
+              <th>${t.thId}</th>
+              <th>${t.thMonto}</th>
+              <th>${t.thFecha}</th>
+              <th>${t.thAcciones}</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+      lista.forEach(i => {
+        html += `
+          <tr id="fila-${i.idIngreso}">
+            <td>${i.idIngreso}</td>
+            <td>$ ${Number(i.monto).toLocaleString('es-CO')}</td>
+            <td>${i.fecha}</td>
+            <td>
+              <button class="btn-edit"   onclick="abrirModal(${i.idIngreso}, ${i.monto}, '${i.fecha}')">${t.btnEditar}</button>
+              <button class="btn-delete" onclick="eliminar(${i.idIngreso})">${t.btnEliminar}</button>
+            </td>
+          </tr>
+        `;
+      });
+      html += '</tbody></table>';
+      document.getElementById('contenido').innerHTML = html;
+    }
+
+    async function eliminar(id) {
+      if (!confirm(textos[lang].confirmEliminar)) return;
+      try {
+        const res = await fetch(`/ingreso/eliminar/${id}`, {
+          method: 'DELETE',
+          headers: { 'Accept-Language': lang }
+        });
+        if (res.status >= 500) {
+          window.location.href = '/500.html';
+          return;
+        }
+        const resultado = await res.text();
+        const ok = resultado.toLowerCase().includes('correctamente') || resultado.toLowerCase().includes('successfully');
+        mostrarToast((ok ? '✅ ' : '❌ ') + resultado, ok ? 'success' : 'error');
+        if (ok) {
+          ingresos = ingresos.filter(i => i.idIngreso !== id);
+          renderTabla(ingresos);
+        }
+      } catch (err) {
+        window.location.href = '/500.html';
+      }
+    }
+
+    function abrirModal(id, monto, fecha) {
+      document.getElementById('edit-id').value    = id;
+      document.getElementById('edit-monto').value = monto;
+      document.getElementById('edit-fecha').value  = fecha;
+      document.getElementById('modalOverlay').classList.add('open');
+    }
+
+    function cerrarModal() {
+      document.getElementById('modalOverlay').classList.remove('open');
+    }
+
+    async function guardarEdicion() {
+      const id    = document.getElementById('edit-id').value;
+      const monto = document.getElementById('edit-monto').value;
+      const fecha = document.getElementById('edit-fecha').value;
+
+      if (!monto || monto <= 0 || !fecha) {
+        mostrarToast('❌ Completa todos los campos.', 'error');
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('idIngreso', id);
+      formData.append('monto', monto);
+      formData.append('fecha', fecha);
+
+      try {
+        const res = await fetch('/ingreso/actualizar', {
+          method: 'PUT',
+          headers: { 'Accept-Language': lang },
+          body: formData
+        });
+        if (res.status >= 500) {
+          window.location.href = '/500.html';
+          return;
+        }
+        const resultado = await res.text();
+        const ok = resultado.toLowerCase().includes('correctamente') || resultado.toLowerCase().includes('successfully');
+        mostrarToast((ok ? '✅ ' : '❌ ') + resultado, ok ? 'success' : 'error');
+        if (ok) {
+          cerrarModal();
+          cargarIngresos();
+        }
+      } catch (err) {
+        window.location.href = '/500.html';
+      }
+    }
+
+    function mostrarToast(msg, tipo) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = 'toast ' + tipo;
+      t.style.display = 'block';
+      setTimeout(() => t.style.display = 'none', 5000);
+    }
+
+    cargarIngresos();
+</script>
+</body>
+</html>

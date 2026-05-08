@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Error - SENA</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+          font-family: 'Segoe UI', sans-serif;
+          background: #0d1117;
+          color: #c9d1d9;
+          min-height: 100vh;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          padding: 20px;
+        }
+        .container { text-align: center; max-width: 600px; }
+        .emoji { font-size: 5rem; margin-bottom: 24px; }
+        h1 {
+          font-size: 2rem; font-weight: 800;
+          color: #f0f6fc; margin-bottom: 12px;
+        }
+        p {
+          font-size: 1rem; color: #8b949e;
+          margin-bottom: 32px; line-height: 1.6;
+        }
+        .code-box {
+          background: #161b22;
+          border: 1px solid #30363d;
+          border-radius: 10px;
+          padding: 20px 28px;
+          margin-bottom: 32px;
+          text-align: left;
+        }
+        .code-box span {
+          color: #58a6ff;
+          font-family: monospace;
+          font-size: .95rem;
+          display: block;
+          margin-bottom: 4px;
+        }
+        .code-box .label {
+          color: #8b949e;
+          font-size: .82rem;
+          margin-bottom: 10px;
+          display: block;
+        }
+        .btn-home {
+          display: inline-block;
+          background: #238636; color: #fff;
+          padding: 12px 28px; border-radius: 8px;
+          text-decoration: none; font-weight: 700;
+          font-size: .95rem; margin-right: 10px;
+          transition: background .2s;
+        }
+        .btn-home:hover { background: #2ea043; }
+        .btn-back {
+          display: inline-block;
+          background: #21262d; color: #c9d1d9;
+          padding: 12px 28px; border-radius: 8px;
+          text-decoration: none; font-weight: 700;
+          font-size: .95rem; border: 1px solid #30363d;
+          transition: background .2s;
+        }
+        .btn-back:hover { background: #30363d; }
+        .footer {
+          margin-top: 48px; font-size: .8rem; color: #484f58;
+        }
+        .footer a { color: #58a6ff; text-decoration: none; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="emoji" id="emoji">❓</div>
+    <h1 id="titulo">Algo salió mal</h1>
+    <p id="descripcion">Ocurrió un error inesperado.</p>
+
+    <div class="code-box">
+        <span class="label">// detalle del error</span>
+        <span id="status">status_code: desconocido</span>
+        <span id="path">path: desconocida</span>
+        <span>system: SENA · Springpoo</span>
+    </div>
+
+    <a href="/index.html" class="btn-home">🏠 Ir al inicio</a>
+    <a href="javascript:history.back()" class="btn-back">← Volver</a>
+
+    <div class="footer">
+        SENA Sistema de Apoyo ·
+        <a href="/index.html">springpoo</a>
+    </div>
+</div>
+
+<script>
+    const params = new URLSearchParams(window.location.search);
+    const status = parseInt(params.get('status')) || 0;
+
+    const errores = {
+      400: { emoji: '🚫', titulo: '400 - Bad Request',           desc: 'La petición está mal formada o le faltan datos.' },
+      401: { emoji: '🔐', titulo: '401 - Unauthorized',          desc: 'Necesitas autenticarte para acceder aquí.' },
+      403: { emoji: '⛔', titulo: '403 - Forbidden',             desc: 'No tienes permiso para ver este recurso.' },
+      404: { emoji: '🔍', titulo: '404 - Page Not Found',        desc: 'Esta página no existe o fue movida.' },
+      405: { emoji: '🚷', titulo: '405 - Method Not Allowed',    desc: 'El método HTTP no está permitido en esta ruta.' },
+      500: { emoji: '💥', titulo: '500 - Internal Server Error', desc: 'Algo explotó en el servidor. Revisa los logs.' },
+      502: { emoji: '🌐', titulo: '502 - Bad Gateway',           desc: 'El servidor recibió una respuesta inválida.' },
+      503: { emoji: '🛠️', titulo: '503 - Service Unavailable',  desc: 'El servidor está en mantenimiento.' },
+    };
+
+    const info = errores[status] || { emoji: '❓', titulo: status + ' - Error Inesperado', desc: 'Ocurrió un error inesperado.' };
+
+    document.getElementById('emoji').textContent       = info.emoji;
+    document.getElementById('titulo').textContent      = info.titulo;
+    document.getElementById('descripcion').textContent = info.desc;
+    document.getElementById('status').textContent      = 'status_code: ' + (status || 'desconocido');
+    document.getElementById('path').textContent        = 'path: ' + window.location.pathname;
+</script>
+</body>
+</html>

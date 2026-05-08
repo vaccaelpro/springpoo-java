@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SENA - Sistema de Apoyo</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+          font-family: 'Segoe UI', sans-serif;
+          background: #f0f4f8;
+          min-height: 100vh;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          padding: 30px 16px;
+        }
+        .header {
+          text-align: center;
+          margin-bottom: 40px;
+        }
+        .header h1 { font-size: 2rem; color: #39A900; font-weight: 800; }
+        .header p  { color: #666; margin-top: 6px; font-size: 1rem; }
+        .grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+          gap: 20px;
+          width: 100%;
+          max-width: 900px;
+        }
+        .card {
+          background: #fff;
+          border-radius: 14px;
+          box-shadow: 0 4px 16px rgba(0,0,0,.08);
+          padding: 30px 24px;
+          text-align: center;
+          text-decoration: none;
+          color: #333;
+          transition: transform .2s, box-shadow .2s;
+          border-top: 5px solid #39A900;
+        }
+        .card:hover {
+          transform: translateY(-5px);
+          box-shadow: 0 8px 24px rgba(0,0,0,.13);
+        }
+        .card .icon { font-size: 2.5rem; margin-bottom: 14px; }
+        .card h2 { font-size: 1.1rem; font-weight: 700; color: #39A900; }
+        .card p  { font-size: .85rem; color: #777; margin-top: 6px; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>🌿 SENA</h1>
+    <p>Sistema de Apoyo de Sostenimiento</p>
+</div>
+
+<div class="grid">
+    <a href="formulario-aprendiz.html" class="card">
+        <div class="icon">📝</div>
+        <h2>Registrar Aprendiz</h2>
+        <p>Agregar un nuevo aprendiz al sistema</p>
+    </a>
+    <a href="lista-aprendices.html" class="card">
+        <div class="icon">👥</div>
+        <h2>Lista de Aprendices</h2>
+        <p>Ver, buscar y eliminar aprendices</p>
+    </a>
+    <a href="formulario-ingreso.html" class="card">
+        <div class="icon">💰</div>
+        <h2>Registrar Ingreso</h2>
+        <p>Agregar un nuevo ingreso</p>
+    </a>
+    <a href="lista-ingresos.html" class="card">
+        <div class="icon">📊</div>
+        <h2>Lista de Ingresos</h2>
+        <p>Ver, filtrar, editar y eliminar ingresos</p>
+    </a>
+</div>
+
+</body>
+</html>

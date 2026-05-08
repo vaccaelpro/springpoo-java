@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lista de Aprendices - SENA</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+          font-family: 'Segoe UI', sans-serif;
+          background: #f0f4f8;
+          min-height: 100vh;
+          padding: 30px 16px;
+        }
+        .card {
+          background: #fff;
+          border-radius: 12px;
+          box-shadow: 0 4px 20px rgba(0,0,0,.1);
+          width: 100%;
+          max-width: 1100px;
+          margin: 0 auto;
+          overflow: hidden;
+        }
+        .card-header {
+          background: #39A900;
+          color: #fff;
+          padding: 24px 32px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+        .card-header h1 { font-size: 1.3rem; }
+        .card-header p  { font-size: .85rem; opacity: .85; margin-top: 4px; }
+        .card-header a {
+          background: #fff;
+          color: #39A900;
+          padding: 8px 18px;
+          border-radius: 7px;
+          font-weight: 700;
+          font-size: .85rem;
+          text-decoration: none;
+        }
+        .card-body { padding: 28px 32px; }
+        .search-bar {
+          margin-bottom: 20px;
+        }
+        .search-bar input {
+          width: 100%;
+          padding: 10px 14px;
+          border: 1.5px solid #cfd8dc;
+          border-radius: 7px;
+          font-size: .9rem;
+        }
+        .search-bar input:focus {
+          outline: none;
+          border-color: #39A900;
+        }
+        table {
+          width: 100%;
+          border-collapse: collapse;
+          font-size: .85rem;
+        }
+        thead {
+          background: #39A900;
+          color: #fff;
+        }
+        thead th {
+          padding: 12px 10px;
+          text-align: left;
+          font-weight: 600;
+        }
+        tbody tr {
+          border-bottom: 1px solid #ecf0f1;
+          transition: background .15s;
+        }
+        tbody tr:hover { background: #f9fbe7; }
+        tbody td {
+          padding: 11px 10px;
+          color: #333;
+          vertical-align: middle;
+        }
+        .badge {
+          display: inline-block;
+          padding: 3px 10px;
+          border-radius: 20px;
+          font-size: .75rem;
+          font-weight: 700;
+        }
+        .badge.regular      { background: #e3f2fd; color: #1565c0; }
+        .badge.transporte   { background: #fff8e1; color: #f57f17; }
+        .badge.alimentacion { background: #fce4ec; color: #880e4f; }
+        .btn-delete {
+          background: #ffebee;
+          color: #c62828;
+          border: 1px solid #ef9a9a;
+          padding: 5px 14px;
+          border-radius: 6px;
+          font-size: .8rem;
+          font-weight: 700;
+          cursor: pointer;
+          transition: background .2s;
+        }
+        .btn-delete:hover { background: #e53935; color: #fff; }
+        .btn-edit {
+          background: #e3f2fd;
+          color: #1565c0;
+          border: 1px solid #90caf9;
+          padding: 5px 14px;
+          border-radius: 6px;
+          font-size: .8rem;
+          font-weight: 700;
+          cursor: pointer;
+          transition: background .2s;
+          margin-right: 6px;
+        }
+        .btn-edit:hover { background: #1565c0; color: #fff; }
+        .empty {
+          text-align: center;
+          padding: 40px;
+          color: #aaa;
+          font-size: .95rem;
+        }
+        .toast {
+          display: none;
+          margin-bottom: 16px;
+          padding: 12px 16px;
+          border-radius: 8px;
+          font-size: .9rem;
+          font-weight: 600;
+        }
+        .toast.success { background: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; }
+        .toast.error   { background: #ffebee; color: #c62828; border: 1px solid #ef9a9a; }
+        .loading {
+          text-align: center;
+          padding: 40px;
+          color: #39A900;
+          font-weight: 600;
+        }
+        .modal-overlay {
+          display: none;
+          position: fixed;
+          top: 0; left: 0; right: 0; bottom: 0;
+          background: rgba(0,0,0,.5);
+          z-index: 1000;
+          justify-content: center;
+          align-items: center;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal {
+          background: #fff;
+          border-radius: 12px;
+          width: 95%;
+          max-width: 700px;
+          max-height: 90vh;
+          overflow-y: auto;
+          box-shadow: 0 8px 30px rgba(0,0,0,.25);
+        }
+        .modal-header {
+          background: #39A900;
+          color: #fff;
+          padding: 18px 24px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          border-radius: 12px 12px 0 0;
+        }
+        .modal-header h2 { font-size: 1.1rem; }
+        .modal-close {
+          background: none;
+          border: none;
+          color: #fff;
+          font-size: 1.5rem;
+          cursor: pointer;
+        }
+        .modal-body {
+          padding: 20px 24px;
+        }
+        .modal-body .grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 12px;
+        }
+        .modal-body .full { grid-column: 1 / -1; }
+        .modal-body label {
+          display: block;
+          font-size: .82rem;
+          font-weight: 600;
+          color: #444;
+          margin-bottom: 4px;
+        }
+        .modal-body input, .modal-body select {
+          width: 100%;
+          padding: 8px 10px;
+          border: 1.5px solid #cfd8dc;
+          border-radius: 7px;
+          font-size: .88rem;
+          color: #333;
+          background: #fafafa;
+        }
+        .modal-body input:focus, .modal-body select:focus {
+          outline: none;
+          border-color: #39A900;
+          background: #fff;
+        }
+        .btn-save {
+          margin-top: 18px;
+          width: 100%;
+          padding: 12px;
+          background: #39A900;
+          color: #fff;
+          font-size: .95rem;
+          font-weight: 700;
+          border: none;
+          border-radius: 8px;
+          cursor: pointer;
+        }
+        .btn-save:hover { background: #2e8700; }
+        .btn-save:disabled { background: #aaa; cursor: not-allowed; }
+        @media (max-width: 768px) {
+          .card-body { padding: 16px; }
+          table { font-size: .75rem; }
+          thead th, tbody td { padding: 8px 6px; }
+          .modal-body .grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+<div class="card">
+
+    <div class="card-header">
+        <div>
+            <h1>Lista de Aprendices</h1>
+            <p>Sistema de apoyo de sostenimiento · SENA</p>
+        </div>
+        <a href="formulario-aprendiz.html">+ Registrar aprendiz</a>
+    </div>
+
+    <div class="card-body">
+        <div class="toast" id="toast"></div>
+
+        <div class="search-bar">
+            <input type="text" id="buscador" placeholder="Buscar por nombre, documento o correo..." />
+        </div>
+
+        <div id="contenido">
+            <div class="loading">Cargando aprendices...</div>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="modalEditar">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Editar Aprendiz</h2>
+      <button class="modal-close" onclick="cerrarModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="edit-id">
+      <div class="grid">
+        <div>
+          <label>Primer nombre *</label>
+          <input type="text" id="edit-primerNombre">
+        </div>
+        <div>
+          <label>Segundo nombre</label>
+          <input type="text" id="edit-segundoNombre">
+        </div>
+        <div>
+          <label>Primer apellido *</label>
+          <input type="text" id="edit-primerApellido">
+        </div>
+        <div>
+          <label>Segundo apellido</label>
+          <input type="text" id="edit-segundoApellido">
+        </div>
+        <div>
+          <label>Tipo de documento</label>
+          <select id="edit-tipoDocumento">
+            <option value="CC">Cédula de Ciudadanía (CC)</option>
+            <option value="TI">Tarjeta de Identidad (TI)</option>
+            <option value="CE">Cédula de Extranjería (CE)</option>
+            <option value="PASAPORTE">Pasaporte</option>
+          </select>
+        </div>
+        <div>
+          <label>Documento *</label>
+          <input type="text" id="edit-documento">
+        </div>
+        <div>
+          <label>Celular</label>
+          <input type="tel" id="edit-celular">
+        </div>
+        <div>
+          <label>Grupo de formación</label>
+          <input type="text" id="edit-grupoFormacion">
+        </div>
+        <div class="full">
+          <label>Correo electrónico *</label>
+          <input type="email" id="edit-correo">
+        </div>
+        <div>
+          <label>Contraseña</label>
+          <input type="password" id="edit-contrasena">
+        </div>
+        <div>
+          <label>Rol</label>
+          <select id="edit-rol">
+            <option value="APRENDIZ">Aprendiz</option>
+            <option value="INSTRUCTOR">Instructor</option>
+            <option value="ADMIN">Administrador</option>
+          </select>
+        </div>
+        <div class="full">
+          <label>Tipo de apoyo</label>
+          <select id="edit-tipoApoyo">
+            <option value="regular">Regular</option>
+            <option value="transporte">Transporte</option>
+            <option value="alimentacion">Alimentación</option>
+          </select>
+        </div>
+        <div class="full">
+          <label>Nueva foto de perfil (opcional)</label>
+          <input type="file" id="edit-foto" accept="image/*">
+        </div>
+      </div>
+      <button class="btn-save" id="btnGuardarEdicion" onclick="guardarEdicion()">Guardar Cambios</button>
+    </div>
+  </div>
+</div>
+
+<script>
+    let aprendices = [];
+
+    async function cargarAprendices() {
+      try {
+        const res = await fetch('/aprendiz/listar');
+        if (res.status >= 500) {
+          window.location.href = '/500.html';
+          return;
+        }
+        if (res.status === 204) {
+          renderTabla([]);
+          return;
+        }
+        aprendices = await res.json();
+        renderTabla(aprendices);
+      } catch (err) {
+        window.location.href = '/500.html';
+      }
+    }
+
+    function renderTabla(lista) {
+      const contenido = document.getElementById('contenido');
+
+      if (lista.length === 0) {
+        contenido.innerHTML = '<div class="empty">No hay aprendices registrados.</div>';
+        return;
+      }
+
+      let html = `
+        <table id="tablaAprendices">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Foto</th>
+              <th>Nombre completo</th>
+              <th>Tipo doc.</th>
+              <th>Documento</th>
+              <th>Celular</th>
+              <th>Correo</th>
+              <th>Grupo</th>
+              <th>Rol</th>
+              <th>Apoyo</th>
+              <th>Fecha registro</th>
+              <th>Acción</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+
+      lista.forEach(a => {
+        const nombre = `${a.primerNombre} ${a.segundoNombre || ''} ${a.primerApellido} ${a.segundoApellido || ''}`.trim();
+        const badgeClass = a.tipoApoyo === 'regular' ? 'regular'
+                         : a.tipoApoyo === 'transporte' ? 'transporte' : 'alimentacion';
+        
+        const fotoHtml = a.foto 
+             ? `<img src="/uploads/${a.foto}" width="40" height="40" style="border-radius:50%; object-fit:cover;">`
+             : `<div style="width:40px; height:40px; border-radius:50%; background:#cfd8dc; display:flex; align-items:center; justify-content:center; font-size:12px; color:#fff;">👤</div>`;
+
+        html += `
+          <tr id="fila-${a.id}">
+            <td>${a.id}</td>
+            <td>${fotoHtml}</td>
+            <td>${nombre}</td>
+            <td>${a.tipoDocumento}</td>
+            <td>${a.documento}</td>
+            <td>${a.celular || '-'}</td>
+            <td>${a.correo}</td>
+            <td>${a.grupoFormacion || '-'}</td>
+            <td>${a.rol}</td>
+            <td><span class="badge ${badgeClass}">${a.tipoApoyo}</span></td>
+            <td>${a.fechaRegistro || '-'}</td>
+            <td>
+              <button class="btn-edit" onclick="abrirEditar(${a.id})">
+                Editar
+              </button>
+              <button class="btn-delete" onclick="eliminar(${a.id}, '${nombre}')">
+                Eliminar
+              </button>
+            </td>
+          </tr>
+        `;
+      });
+
+      html += '</tbody></table>';
+      contenido.innerHTML = html;
+    }
+
+    async function eliminar(id, nombre) {
+      const confirmar = confirm(`¿Seguro que deseas eliminar a "${nombre}"?\nEsta acción no se puede deshacer.`);
+      if (!confirmar) return;
+
+      try {
+        const res = await fetch(`/aprendiz/eliminar/${id}`, {
+          method: 'DELETE'
+        });
+
+        if (res.status >= 500) {
+          window.location.href = '/500.html';
+          return;
+        }
+
+        const resultado = await res.text();
+
+        if (resultado.includes('correctamente')) {
+          document.getElementById('fila-' + id).remove();
+          aprendices = aprendices.filter(a => a.id !== id);
+          mostrarToast('✅ ' + resultado, 'success');
+
+          if (aprendices.length === 0) {
+            document.getElementById('contenido').innerHTML =
+              '<div class="empty">No hay aprendices registrados.</div>';
+          }
+        } else {
+          mostrarToast('❌ ' + resultado, 'error');
+        }
+      } catch (err) {
+        window.location.href = '/500.html';
+      }
+    }
+
+    document.getElementById('buscador').addEventListener('input', function () {
+      const texto = this.value.toLowerCase();
+      const filtrados = aprendices.filter(a => {
+        const nombre = `${a.primerNombre} ${a.segundoNombre || ''} ${a.primerApellido} ${a.segundoApellido || ''}`.toLowerCase();
+        return nombre.includes(texto)
+            || (a.documento && a.documento.includes(texto))
+            || (a.correo && a.correo.toLowerCase().includes(texto));
+      });
+      renderTabla(filtrados);
+    });
+
+    function mostrarToast(msg, tipo) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = 'toast ' + tipo;
+      t.style.display = 'block';
+      setTimeout(() => t.style.display = 'none', 5000);
+    }
+
+    function abrirEditar(id) {
+      const a = aprendices.find(ap => ap.id === id);
+      if (!a) return;
+
+      document.getElementById('edit-id').value = a.id;
+      document.getElementById('edit-primerNombre').value = a.primerNombre || '';
+      document.getElementById('edit-segundoNombre').value = a.segundoNombre || '';
+      document.getElementById('edit-primerApellido').value = a.primerApellido || '';
+      document.getElementById('edit-segundoApellido').value = a.segundoApellido || '';
+      document.getElementById('edit-tipoDocumento').value = a.tipoDocumento || 'CC';
+      document.getElementById('edit-documento').value = a.documento || '';
+      document.getElementById('edit-celular').value = a.celular || '';
+      document.getElementById('edit-grupoFormacion').value = a.grupoFormacion || '';
+      document.getElementById('edit-correo').value = a.correo || '';
+      document.getElementById('edit-contrasena').value = a.contrasena || '';
+      document.getElementById('edit-rol').value = a.rol || 'APRENDIZ';
+      document.getElementById('edit-tipoApoyo').value = a.tipoApoyo || 'regular';
+      document.getElementById('edit-foto').value = '';
+
+      document.getElementById('modalEditar').classList.add('active');
+    }
+
+    function cerrarModal() {
+      document.getElementById('modalEditar').classList.remove('active');
+    }
+
+    async function guardarEdicion() {
+      const btn = document.getElementById('btnGuardarEdicion');
+      btn.disabled = true;
+      btn.textContent = 'Guardando...';
+
+      const datos = {
+        id:              parseInt(document.getElementById('edit-id').value),
+        primerNombre:    document.getElementById('edit-primerNombre').value.trim(),
+        segundoNombre:   document.getElementById('edit-segundoNombre').value.trim(),
+        primerApellido:  document.getElementById('edit-primerApellido').value.trim(),
+        segundoApellido: document.getElementById('edit-segundoApellido').value.trim(),
+        tipoDocumento:   document.getElementById('edit-tipoDocumento').value,
+        documento:       document.getElementById('edit-documento').value.trim(),
+        celular:         document.getElementById('edit-celular').value.trim(),
+        grupoFormacion:  document.getElementById('edit-grupoFormacion').value.trim(),
+        correo:          document.getElementById('edit-correo').value.trim(),
+        contrasena:      document.getElementById('edit-contrasena').value,
+        rol:             document.getElementById('edit-rol').value,
+        tipoApoyo:       document.getElementById('edit-tipoApoyo').value
+      };
+
+      const formData = new FormData();
+      formData.append('aprendiz', JSON.stringify(datos));
+
+      const fotoInput = document.getElementById('edit-foto');
+      if (fotoInput.files.length > 0) {
+        formData.append('foto', fotoInput.files[0]);
+      }
+
+      try {
+        const res = await fetch('/aprendiz/actualizar', {
+          method: 'PUT',
+          body: formData
+        });
+
+        if (res.status >= 500) {
+          window.location.href = '/500.html';
+          return;
+        }
+
+        const resultado = await res.text();
+
+        if (resultado.includes('correctamente')) {
+          mostrarToast('✅ ' + resultado, 'success');
+          cerrarModal();
+          cargarAprendices();
+        } else {
+          mostrarToast('❌ ' + resultado, 'error');
+        }
+      } catch (err) {
+        window.location.href = '/500.html';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Guardar Cambios';
+      }
+    }
+
+    document.getElementById('modalEditar').addEventListener('click', function(e) {
+      if (e.target === this) cerrarModal();
+    });
+
+    cargarAprendices();
+</script>
+</body>
+</html>

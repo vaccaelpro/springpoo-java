@@ -112,6 +112,64 @@ public class persistenceAprendiz {
         return lista;
     }
 
+    public int countAll(String query) {
+        String sql = "SELECT COUNT(*) FROM aprendiz";
+        if (query != null && !query.isEmpty()) {
+            sql += " WHERE primer_nombre LIKE ? OR primer_apellido LIKE ? OR documento LIKE ? OR correo LIKE ?";
+        }
+
+        Connection conn = conexion.getInstancia();
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            if (query != null && !query.isEmpty()) {
+                String q = "%" + query + "%";
+                ps.setString(1, q);
+                ps.setString(2, q);
+                ps.setString(3, q);
+                ps.setString(4, q);
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("Error al contar aprendices: {}", e.getMessage(), e);
+        }
+        return 0;
+    }
+
+    public List<Aprendiz> findPaginated(int offset, int limit, String query) {
+        List<Aprendiz> lista = new ArrayList<>();
+        String sql = "SELECT * FROM aprendiz";
+        if (query != null && !query.isEmpty()) {
+            sql += " WHERE primer_nombre LIKE ? OR primer_apellido LIKE ? OR documento LIKE ? OR correo LIKE ?";
+        }
+        sql += " ORDER BY id DESC LIMIT ? OFFSET ?";
+
+        Connection conn = conexion.getInstancia();
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            int idx = 1;
+            if (query != null && !query.isEmpty()) {
+                String q = "%" + query + "%";
+                ps.setString(idx++, q);
+                ps.setString(idx++, q);
+                ps.setString(idx++, q);
+                ps.setString(idx++, q);
+            }
+            ps.setInt(idx++, limit);
+            ps.setInt(idx++, offset);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    lista.add(mapRow(rs));
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("Error al consultar aprendices paginados: {}", e.getMessage(), e);
+        }
+        return lista;
+    }
+
     public boolean delete(int id) {
         logger.debug("Intentando eliminar aprendiz con ID: {}", id);
         String sql = "DELETE FROM aprendiz WHERE id = ?";

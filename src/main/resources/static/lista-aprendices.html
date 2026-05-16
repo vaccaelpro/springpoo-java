@@ -222,6 +222,47 @@
           thead th, tbody td { padding: 8px 6px; }
           .modal-body .grid { grid-template-columns: 1fr; }
         }
+
+        /* Pagination Styles */
+        .pagination {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          gap: 8px;
+          margin-top: 24px;
+          flex-wrap: wrap;
+        }
+        .pagination button {
+          background: #fff;
+          border: 1.5px solid #cfd8dc;
+          color: #555;
+          padding: 8px 14px;
+          border-radius: 6px;
+          cursor: pointer;
+          font-weight: 600;
+          font-size: .85rem;
+          transition: all .2s;
+        }
+        .pagination button:hover:not(:disabled) {
+          border-color: #39A900;
+          color: #39A900;
+          background: #f9fbe7;
+        }
+        .pagination button.active {
+          background: #39A900;
+          color: #fff;
+          border-color: #39A900;
+        }
+        .pagination button:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+        .pagination-info {
+          text-align: center;
+          color: #666;
+          font-size: .85rem;
+          margin-top: 12px;
+        }
     </style>
 </head>
 <body>
@@ -245,6 +286,9 @@
         <div id="contenido">
             <div class="loading">Cargando aprendices...</div>
         </div>
+
+        <div id="paginacion" class="pagination"></div>
+        <div id="paginacion-info" class="pagination-info"></div>
     </div>
 </div>
 
@@ -330,22 +374,30 @@
 
 <script>
     let aprendices = [];
+    let currentPage = 1;
+    let totalPages = 1;
+    let pageSize = 10;
+    let currentSearch = '';
 
-    async function cargarAprendices() {
+    async function cargarAprendices(page = 1) {
       try {
-        const res = await fetch('/aprendiz/listar');
+        currentPage = page;
+        const res = await fetch(`/aprendiz/listar?page=${page}&size=${pageSize}&search=${encodeURIComponent(currentSearch)}`);
+        
         if (res.status >= 500) {
           window.location.href = '/500.html';
           return;
         }
-        if (res.status === 204) {
-          renderTabla([]);
-          return;
-        }
-        aprendices = await res.json();
+
+        const data = await res.json();
+        aprendices = data.content;
+        totalPages = data.totalPages;
+        
         renderTabla(aprendices);
+        renderPaginacion(data);
       } catch (err) {
-        window.location.href = '/500.html';
+        console.error(err);
+        // window.location.href = '/500.html';
       }
     }
 
@@ -416,6 +468,36 @@
       contenido.innerHTML = html;
     }
 
+    function renderPaginacion(data) {
+      const paginacion = document.getElementById('paginacion');
+      const info = document.getElementById('paginacion-info');
+      
+      let html = '';
+      
+      // Botón Primero
+      html += `<button onclick="cargarAprendices(1)" ${data.currentPage === 1 ? 'disabled' : ''}>« Primero</button>`;
+      
+      // Botón Anterior
+      html += `<button onclick="cargarAprendices(${data.currentPage - 1})" ${data.currentPage === 1 ? 'disabled' : ''}>‹ Anterior</button>`;
+      
+      // Números de página (mostrando un rango)
+      let start = Math.max(1, data.currentPage - 2);
+      let end = Math.min(data.totalPages, data.currentPage + 2);
+      
+      for (let i = start; i <= end; i++) {
+        html += `<button onclick="cargarAprendices(${i})" class="${i === data.currentPage ? 'active' : ''}">${i}</button>`;
+      }
+      
+      // Botón Siguiente
+      html += `<button onclick="cargarAprendices(${data.currentPage + 1})" ${data.currentPage === data.totalPages ? 'disabled' : ''}>Siguiente ›</button>`;
+      
+      // Botón Último
+      html += `<button onclick="cargarAprendices(${data.totalPages})" ${data.currentPage === data.totalPages ? 'disabled' : ''}>Último »</button>`;
+      
+      paginacion.innerHTML = html;
+      info.textContent = `Mostrando página ${data.currentPage} de ${data.totalPages} (${data.totalElements} registros totales)`;
+    }
+
     async function eliminar(id, nombre) {
       const confirmar = confirm(`¿Seguro que deseas eliminar a "${nombre}"?\nEsta acción no se puede deshacer.`);
       if (!confirmar) return;
@@ -433,14 +515,8 @@
         const resultado = await res.text();
 
         if (resultado.includes('correctamente')) {
-          document.getElementById('fila-' + id).remove();
-          aprendices = aprendices.filter(a => a.id !== id);
           mostrarToast('✅ ' + resultado, 'success');
-
-          if (aprendices.length === 0) {
-            document.getElementById('contenido').innerHTML =
-              '<div class="empty">No hay aprendices registrados.</div>';
-          }
+          cargarAprendices(currentPage); // Recargar página actual
         } else {
           mostrarToast('❌ ' + resultado, 'error');
         }
@@ -449,15 +525,13 @@
       }
     }
 
+    let searchTimeout;
     document.getElementById('buscador').addEventListener('input', function () {
-      const texto = this.value.toLowerCase();
-      const filtrados = aprendices.filter(a => {
-        const nombre = `${a.primerNombre} ${a.segundoNombre || ''} ${a.primerApellido} ${a.segundoApellido || ''}`.toLowerCase();
-        return nombre.includes(texto)
-            || (a.documento && a.documento.includes(texto))
-            || (a.correo && a.correo.toLowerCase().includes(texto));
-      });
-      renderTabla(filtrados);
+      clearTimeout(searchTimeout);
+      currentSearch = this.value;
+      searchTimeout = setTimeout(() => {
+        cargarAprendices(1); // Buscar siempre desde la página 1
+      }, 400);
     });
 
     function mostrarToast(msg, tipo) {
@@ -539,7 +613,7 @@
         if (resultado.includes('correctamente')) {
           mostrarToast('✅ ' + resultado, 'success');
           cerrarModal();
-          cargarAprendices();
+          cargarAprendices(currentPage);
         } else {
           mostrarToast('❌ ' + resultado, 'error');
         }

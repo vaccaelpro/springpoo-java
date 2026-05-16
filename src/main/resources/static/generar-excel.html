@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Generador Excel de Prueba</title>
+  <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f4f8;
+      min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .card {
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 4px 20px rgba(0,0,0,.1);
+      padding: 40px 48px;
+      text-align: center;
+      max-width: 480px;
+      width: 100%;
+    }
+    .icon { font-size: 3.5rem; margin-bottom: 16px; }
+    h1 { font-size: 1.3rem; color: #1565c0; margin-bottom: 8px; }
+    p  { font-size: .9rem; color: #666; margin-bottom: 28px; }
+    .btn {
+      display: inline-block;
+      padding: 14px 32px;
+      background: #39A900;
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background .2s;
+    }
+    .btn:hover { background: #2e8700; }
+    .info {
+      margin-top: 24px;
+      background: #e3f2fd;
+      border-radius: 8px;
+      padding: 14px;
+      font-size: .82rem;
+      color: #1565c0;
+      text-align: left;
+    }
+    .info b { display: block; margin-bottom: 6px; }
+    a.back { display: inline-block; margin-top: 20px; color: #39A900; font-size: .85rem; }
+  </style>
+</head>
+<body>
+<div class="card">
+  <div class="icon">📗</div>
+  <h1>Archivo Excel de prueba</h1>
+  <p>Descarga un Excel con 5 aprendices de muestra listos para importar al sistema.</p>
+  <button class="btn" onclick="generarExcel()">⬇️ Descargar Excel de prueba</button>
+  <div class="info">
+    <b>Columnas incluidas:</b>
+    A: primerNombre · B: segundoNombre · C: primerApellido · D: segundoApellido ·
+    E: tipoDocumento · F: documento · G: celular · H: grupoFormacion ·
+    I: correo · J: contrasena · K: rol · L: tipoApoyo
+  </div>
+  <a class="back" href="subir-excel.html">← Volver a Importar Excel</a>
+</div>
+
+<script>
+function generarExcel() {
+  const cabecera = [
+    'primerNombre', 'segundoNombre', 'primerApellido', 'segundoApellido',
+    'tipoDocumento', 'documento', 'celular', 'grupoFormacion',
+    'correo', 'contrasena', 'rol', 'tipoApoyo'
+  ];
+
+  const datos = [
+    ['Carlos',    'Andrés',   'Ramírez',  'Torres',   'CC', '1023456789', '3001234567', '2875420', 'carlos.ramirez@sena.edu.co',   'Sena2024*', 'APRENDIZ', 'regular'],
+    ['Laura',     'Valentina','González', 'Pérez',    'CC', '1034567890', '3112345678', '2875421', 'laura.gonzalez@sena.edu.co',   'Sena2024*', 'APRENDIZ', 'transporte'],
+    ['Miguel',    'Ángel',    'Herrera',  'López',    'TI', '1045678901', '3223456789', '2875422', 'miguel.herrera@sena.edu.co',   'Sena2024*', 'APRENDIZ', 'alimentacion'],
+    ['Daniela',   'Sofía',    'Martínez', 'Ruiz',     'CC', '1056789012', '3134567890', '2875423', 'daniela.martinez@sena.edu.co', 'Sena2024*', 'APRENDIZ', 'regular'],
+    ['Sebastián', 'Felipe',   'Castro',   'Morales',  'CC', '1067890123', '3045678901', '2875424', 'sebastian.castro@sena.edu.co', 'Sena2024*', 'APRENDIZ', 'transporte'],
+  ];
+
+  // Construir hoja: primera fila = cabeceras
+  const hojaData = [cabecera, ...datos];
+
+  const hoja = XLSX.utils.aoa_to_sheet(hojaData);
+
+  // Ancho de columnas
+  hoja['!cols'] = [
+    {wch:14},{wch:12},{wch:14},{wch:14},
+    {wch:12},{wch:14},{wch:13},{wch:12},
+    {wch:32},{wch:12},{wch:10},{wch:13}
+  ];
+
+  const libro = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(libro, hoja, 'Aprendices');
+
+  XLSX.writeFile(libro, 'aprendices_prueba.xlsx');
+}
+</script>
+</body>
+</html>

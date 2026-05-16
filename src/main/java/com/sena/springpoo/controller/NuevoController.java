@@ -70,8 +70,7 @@ public class NuevoController {
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(lang.startsWith("en")
                             ? "Income registered with ID: " + ingreso.getIdIngreso()
-                            : "Ingreso registrado con ID: " + ingreso.g
-                            etIdIngreso());
+                            : "Ingreso registrado con ID: " + ingreso.getIdIngreso());
         }
         throw new BadRequestException(lang.startsWith("en")
                 ? "Could not save the income."

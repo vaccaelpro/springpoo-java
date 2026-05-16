@@ -74,13 +74,51 @@ public class ControllerAprendiz {
 
     @GetMapping("/listar")
     @CrossOrigin(origins = "${cors.allowed-origin:http://localhost:3000}")
-    public ResponseEntity<List<Aprendiz>> listar() {
-        logger.info("GET /aprendiz/listar");
-        List<Aprendiz> lista = persistence.findAll();
-        if (lista.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+    public ResponseEntity<Object> listar(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String search) {
+        
+        logger.info("GET /aprendiz/listar - page: {}, size: {}, search: {}", page, size, search);
+        
+        int offset = (page - 1) * size;
+        List<Aprendiz> lista = persistence.findPaginated(offset, size, search);
+        int totalElements = persistence.countAll(search);
+        int totalPages = (int) Math.ceil((double) totalElements / size);
+
+        PaginatedResponse response = new PaginatedResponse(
+                lista,
+                totalElements,
+                totalPages,
+                page,
+                size
+        );
+
+        return ResponseEntity.ok(response);
+    }
+
+    // Helper class for paginated response
+    public static class PaginatedResponse {
+        private List<Aprendiz> content;
+        private int totalElements;
+        private int totalPages;
+        private int currentPage;
+        private int pageSize;
+
+        public PaginatedResponse(List<Aprendiz> content, int totalElements, int totalPages, int currentPage, int pageSize) {
+            this.content = content;
+            this.totalElements = totalElements;
+            this.totalPages = totalPages;
+            this.currentPage = currentPage;
+            this.pageSize = pageSize;
         }
-        return ResponseEntity.ok(lista);
+
+        // Getters
+        public List<Aprendiz> getContent() { return content; }
+        public int getTotalElements() { return totalElements; }
+        public int getTotalPages() { return totalPages; }
+        public int getCurrentPage() { return currentPage; }
+        public int getPageSize() { return pageSize; }
     }
 
     @DeleteMapping("/eliminar/{id}")
@@ -147,6 +185,16 @@ public class ControllerAprendiz {
         throw new ResourceNotFoundException("No se encontró el aprendiz con ID: " + aprendiz.getId());
     }
 
+
+    @PostMapping("/generar-datos")
+    @CrossOrigin(origins = "${cors.allowed-origin:http://localhost:3000}")
+    public ResponseEntity<String> generarDatos(@RequestParam(defaultValue = "10000") int cantidad) {
+        logger.info("POST /aprendiz/generar-datos - cantidad: {}", cantidad);
+        new Thread(() -> {
+            new com.sena.springpoo.util.DataGenerator().generateData(cantidad);
+        }).start();
+        return ResponseEntity.ok("Proceso de generación de " + cantidad + " registros iniciado en segundo plano.");
+    }
 
     private String guardarFoto(MultipartFile foto) throws Exception {
         String originalName = foto.getOriginalFilename();

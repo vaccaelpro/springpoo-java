@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Importar Aprendices - SENA</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f4f8;
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 40px 16px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,.1);
+      width: 100%;
+      max-width: 680px;
+      overflow: hidden;
+    }
+
+    .card-header {
+      background: #39A900;
+      color: #fff;
+      padding: 24px 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .card-header h1 { font-size: 1.3rem; }
+    .card-header p  { font-size: .85rem; opacity: .85; margin-top: 4px; }
+    .card-header a {
+      background: #fff;
+      color: #39A900;
+      padding: 8px 18px;
+      border-radius: 7px;
+      font-weight: 700;
+      font-size: .85rem;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .card-body { padding: 32px; }
+
+    /* Drop zone */
+    .drop-zone {
+      border: 2.5px dashed #b2dfdb;
+      border-radius: 10px;
+      background: #f9fffe;
+      padding: 48px 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color .2s, background .2s;
+    }
+    .drop-zone:hover, .drop-zone.drag-over {
+      border-color: #39A900;
+      background: #f1fff0;
+    }
+    .drop-zone .icon { font-size: 3rem; margin-bottom: 12px; }
+    .drop-zone p   { font-size: .95rem; color: #555; }
+    .drop-zone span { color: #39A900; font-weight: 700; }
+
+    input[type="file"] { display: none; }
+
+    /* File preview */
+    .file-preview {
+      display: none;
+      align-items: center;
+      gap: 12px;
+      margin-top: 18px;
+      background: #e8f5e9;
+      border: 1px solid #a5d6a7;
+      border-radius: 8px;
+      padding: 12px 16px;
+    }
+    .file-preview .file-icon { font-size: 1.8rem; }
+    .file-preview .file-info { flex: 1; }
+    .file-preview .file-name { font-weight: 700; color: #2e7d32; font-size: .9rem; }
+    .file-preview .file-size { font-size: .78rem; color: #555; margin-top: 2px; }
+    .file-preview .btn-remove {
+      background: none; border: none; cursor: pointer;
+      color: #c62828; font-size: 1.2rem;
+    }
+
+    /* Info box */
+    .info-box {
+      margin-top: 24px;
+      background: #e3f2fd;
+      border: 1px solid #90caf9;
+      border-radius: 8px;
+      padding: 16px;
+    }
+    .info-box h3 { font-size: .85rem; color: #1565c0; font-weight: 700; margin-bottom: 8px; }
+    .info-box table { width: 100%; border-collapse: collapse; font-size: .8rem; }
+    .info-box th, .info-box td { padding: 5px 8px; text-align: left; border-bottom: 1px solid #bbdefb; }
+    .info-box th { color: #1565c0; }
+
+    /* Buttons */
+    .btn-upload {
+      margin-top: 24px;
+      width: 100%;
+      padding: 14px;
+      background: #39A900;
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background .2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .btn-upload:hover  { background: #2e8700; }
+    .btn-upload:disabled { background: #aaa; cursor: not-allowed; }
+
+    /* Progress */
+    .progress-wrap {
+      display: none;
+      margin-top: 20px;
+    }
+    .progress-label { font-size: .82rem; color: #555; margin-bottom: 6px; }
+    .progress-bar-bg {
+      background: #e0e0e0;
+      border-radius: 20px;
+      height: 10px;
+      overflow: hidden;
+    }
+    .progress-bar {
+      height: 100%;
+      background: #39A900;
+      border-radius: 20px;
+      width: 0%;
+      transition: width .3s;
+    }
+
+    /* Toast / result */
+    .toast {
+      display: none;
+      margin-top: 20px;
+      padding: 14px 18px;
+      border-radius: 8px;
+      font-size: .9rem;
+    }
+    .toast.success { background: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; }
+    .toast.error   { background: #ffebee; color: #c62828; border: 1px solid #ef9a9a; }
+
+    /* Result table */
+    .result-box {
+      display: none;
+      margin-top: 24px;
+      border: 1px solid #c8e6c9;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .result-box h3 {
+      background: #39A900;
+      color: #fff;
+      padding: 10px 16px;
+      font-size: .88rem;
+    }
+    .result-table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+    .result-table th { background: #f1f8e9; color: #33691e; padding: 8px 12px; text-align: left; }
+    .result-table td { padding: 7px 12px; border-bottom: 1px solid #e8f5e9; color: #333; }
+    .result-table tr:last-child td { border-bottom: none; }
+
+    @media (max-width: 560px) {
+      .card-body { padding: 20px 16px; }
+      .card-header { flex-direction: column; gap: 12px; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <div class="card-header">
+    <div>
+      <h1>📥 Importar Aprendices desde Excel</h1>
+      <p>Sube el archivo y los datos se guardarán automáticamente en la base de datos</p>
+    </div>
+    <a href="lista-aprendices.html">Ver aprendices →</a>
+  </div>
+
+  <div class="card-body">
+
+    <!-- Drop Zone -->
+    <div class="drop-zone" id="dropZone">
+      <div class="icon">📊</div>
+      <p>Arrastra tu archivo <span>.xlsx</span> aquí o</p>
+      <p style="margin-top:8px"><span>haz clic para seleccionarlo</span></p>
+      <input type="file" id="fileInput" accept=".xlsx,.xls" />
+    </div>
+
+    <!-- File preview -->
+    <div class="file-preview" id="filePreview">
+      <div class="file-icon">📗</div>
+      <div class="file-info">
+        <div class="file-name" id="fileName">—</div>
+        <div class="file-size" id="fileSize">—</div>
+      </div>
+      <button class="btn-remove" id="btnRemove" title="Quitar archivo">✕</button>
+    </div>
+
+    <!-- Columns info -->
+    <div class="info-box">
+      <h3>📋 Estructura del Excel requerida (fila 1 = cabecera)</h3>
+      <table>
+        <tr>
+          <th>Columna</th><th>Campo</th>
+          <th>Columna</th><th>Campo</th>
+        </tr>
+        <tr><td>A</td><td>primerNombre *</td><td>G</td><td>celular</td></tr>
+        <tr><td>B</td><td>segundoNombre</td><td>H</td><td>grupoFormacion</td></tr>
+        <tr><td>C</td><td>primerApellido *</td><td>I</td><td>correo *</td></tr>
+        <tr><td>D</td><td>segundoApellido</td><td>J</td><td>contrasena</td></tr>
+        <tr><td>E</td><td>tipoDocumento</td><td>K</td><td>rol</td></tr>
+        <tr><td>F</td><td>documento *</td><td>L</td><td>tipoApoyo</td></tr>
+      </table>
+    </div>
+
+    <!-- Upload button -->
+    <button class="btn-upload" id="btnUpload" disabled>
+      <span>☁️</span> Enviar a n8n y guardar en base de datos
+    </button>
+
+    <!-- Progress -->
+    <div class="progress-wrap" id="progressWrap">
+      <div class="progress-label" id="progressLabel">Enviando archivo a n8n...</div>
+      <div class="progress-bar-bg"><div class="progress-bar" id="progressBar"></div></div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <!-- Result table -->
+    <div class="result-box" id="resultBox">
+      <h3>✅ Aprendices insertados exitosamente</h3>
+      <table class="result-table">
+        <thead>
+          <tr><th>#</th><th>Nombre</th><th>Correo</th><th>Documento</th></tr>
+        </thead>
+        <tbody id="resultBody"></tbody>
+      </table>
+    </div>
+
+  </div><!-- card-body -->
+</div><!-- card -->
+
+<script>
+  // Enviar archivo al backend de Spring Boot, que procesará y notificará a n8n
+  const UPLOAD_URL = '/importar/excel';
+
+  const dropZone   = document.getElementById('dropZone');
+  const fileInput  = document.getElementById('fileInput');
+  const filePreview = document.getElementById('filePreview');
+  const fileName   = document.getElementById('fileName');
+  const fileSize   = document.getElementById('fileSize');
+  const btnRemove  = document.getElementById('btnRemove');
+  const btnUpload  = document.getElementById('btnUpload');
+  const progressWrap = document.getElementById('progressWrap');
+  const progressBar  = document.getElementById('progressBar');
+  const progressLabel = document.getElementById('progressLabel');
+  const toast      = document.getElementById('toast');
+  const resultBox  = document.getElementById('resultBox');
+  const resultBody = document.getElementById('resultBody');
+
+  let selectedFile = null;
+
+  // Click on drop zone → open file picker
+  dropZone.addEventListener('click', () => fileInput.click());
+
+  // Drag & drop
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+  dropZone.addEventListener('dragleave', ()  => dropZone.classList.remove('drag-over'));
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.classList.remove('drag-over');
+    const f = e.dataTransfer.files[0];
+    if (f) handleFile(f);
+  });
+
+  fileInput.addEventListener('change', () => {
+    if (fileInput.files[0]) handleFile(fileInput.files[0]);
+  });
+
+  btnRemove.addEventListener('click', clearFile);
+
+  function handleFile(f) {
+    if (!f.name.endsWith('.xlsx') && !f.name.endsWith('.xls')) {
+      showToast('❌ Solo se aceptan archivos Excel (.xlsx o .xls)', 'error');
+      return;
+    }
+    selectedFile = f;
+    fileName.textContent = f.name;
+    fileSize.textContent = (f.size / 1024).toFixed(1) + ' KB';
+    filePreview.style.display = 'flex';
+    btnUpload.disabled = false;
+    hideToast();
+    resultBox.style.display = 'none';
+  }
+
+  function clearFile() {
+    selectedFile = null;
+    fileInput.value = '';
+    filePreview.style.display = 'none';
+    btnUpload.disabled = true;
+    resultBox.style.display = 'none';
+    hideToast();
+  }
+
+  // Upload to n8n
+  btnUpload.addEventListener('click', async () => {
+    if (!selectedFile) return;
+
+    btnUpload.disabled = true;
+    progressWrap.style.display = 'block';
+    progressBar.style.width = '0%';
+    progressLabel.textContent = 'Enviando archivo a n8n...';
+    resultBox.style.display = 'none';
+    hideToast();
+
+    // Animate progress bar while waiting
+    animateBar(60, 1800);
+
+    const formData = new FormData();
+    formData.append('file', selectedFile);
+
+    try {
+      progressLabel.textContent = 'Procesando datos en n8n y guardando en base de datos...';
+      animateBar(90, 1200);
+
+      const res = await fetch(UPLOAD_URL, {
+        method: 'POST',
+        body: formData
+      });
+
+      progressBar.style.width = '100%';
+      progressLabel.textContent = 'Completado ✓';
+
+      if (res.ok) {
+        let data = null;
+        try { data = await res.json(); } catch (_) {}
+
+        if (data && data.aprendices && data.aprendices.length > 0) {
+          renderResults(data.aprendices);
+          showToast(`✅ ${data.insertados} aprendice(s) guardados correctamente.`, 'success');
+        } else if (data && data.mensaje) {
+          showToast('✅ ' + data.mensaje, 'success');
+        } else {
+          showToast('✅ Archivo procesado correctamente por n8n.', 'success');
+        }
+      } else {
+        const errText = await res.text().catch(() => 'Error desconocido');
+        showToast('❌ Error en el proceso: ' + errText, 'error');
+      }
+
+    } catch (err) {
+      progressBar.style.width = '100%';
+      showToast('❌ Error de conexión. Verifica que el servidor (Spring Boot) esté activo.', 'error');
+    } finally {
+      btnUpload.disabled = false;
+      setTimeout(() => { progressWrap.style.display = 'none'; }, 1500);
+    }
+  });
+
+  function renderResults(aprendices) {
+    resultBody.innerHTML = '';
+    aprendices.forEach((a, i) => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${i + 1}</td>
+        <td>${a.nombre || '—'}</td>
+        <td>${a.correo || '—'}</td>
+        <td>${a.documento || '—'}</td>
+      `;
+      resultBody.appendChild(tr);
+    });
+    resultBox.style.display = 'block';
+  }
+
+  function animateBar(target, duration) {
+    const start = parseFloat(progressBar.style.width) || 0;
+    const diff  = target - start;
+    const step  = 20;
+    const inc   = diff / (duration / step);
+    let current = start;
+    const iv = setInterval(() => {
+      current += inc;
+      progressBar.style.width = Math.min(current, target) + '%';
+      if (current >= target) clearInterval(iv);
+    }, step);
+  }
+
+  function showToast(msg, type) {
+    toast.textContent = msg;
+    toast.className = 'toast ' + type;
+    toast.style.display = 'block';
+  }
+
+  function hideToast() {
+    toast.style.display = 'none';
+  }
+</script>
+</body>
+</html>
